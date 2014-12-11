@@ -19,8 +19,12 @@ gem 'spring',        group: :development
 gem 'devise'
 gem 'activeadmin', github: 'activeadmin'
 
+gem 'wisper'
 gem 'sidekiq'
 # gem 'sinatra', require: false
+
+gem 'thin'
+gem 'foreman'
 
 gem 'mechanize'
 

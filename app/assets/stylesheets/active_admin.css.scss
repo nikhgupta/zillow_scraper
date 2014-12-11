@@ -21,3 +21,19 @@
     display: none;
   }
 }
+
+#resultsbox {
+  border: 4px solid #ccc;
+  border-radius: 4px;
+  padding: 20px;
+  min-height: 600px;
+  font-family: "Droid Sans Mono", monospace;
+  font-size: 1.2em;
+  background-color: #e8e8e8;
+  color: #333;
+  font-weight: bold;
+}
+
+.emphasize {
+  color: #589;
+}
