@@ -22,7 +22,8 @@ gem 'activeadmin', github: 'activeadmin'
 gem 'faye'
 gem 'sidekiq'
 gem 'bloomfilter-rb'
-# gem 'sinatra', require: false
+gem 'sidekiq-priority'
+gem 'sinatra', require: false
 
 gem 'thin'
 gem 'foreman'

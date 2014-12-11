@@ -7,16 +7,18 @@ class ListingsScraper
     page = Mechanize::AGENT.get url
 
     # update faye
-    broadcast_listing page
+    broadcast_listing url, page
   end
 
   private
 
-  def broadcast_listing page
+  def broadcast_listing url, page
     faye    = URI.parse "http://localhost:9292/faye"
-    message = "Found Listing: #{page.search("title").text}"
+
+    title   = page.search("title").text.gsub(/ - Zillow$/, '')
+    message = "<span class='listings'>- Found Listing: <a href='#{url}'>#{title}</a></span>"
     message = { channel: "/scraper/messages", data: message }
 
-    Net::HTTP.post_form faye, message: data.to_json
+    Net::HTTP.post_form faye, message: message.to_json
   end
 end

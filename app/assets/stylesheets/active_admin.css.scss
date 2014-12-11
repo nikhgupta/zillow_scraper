@@ -31,10 +31,21 @@
   font-size: 1.2em;
   background-color: #e8e8e8;
   color: #333;
-  font-weight: bold;
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 600px;
+  a {
+    text-decoration: none;
+  }
+  span.listing {
+    font-weight: bold;
+  }
+  span.crawl {
+    color: #aaa;
+    a {
+      color: #daa;
+    }
+  }
 }
 
 .emphasize {

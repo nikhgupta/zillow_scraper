@@ -27,6 +27,8 @@ ActiveAdmin.register_page "Dashboard" do
   end
 
   page_action :stop_scraper, method: :post do
+    Sidekiq::Queue.confirm_clear(*ZillowScraper::Queues)
+    BLOOM_FILTER.clear
     session[:scraper_running] = false
     redirect_to dashboard_path, notice: "Scraper has been stopped."
   end
