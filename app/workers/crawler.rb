@@ -55,6 +55,7 @@ class Crawler
     faye    = URI.parse "http://localhost:9292/faye"
     title   = extract_meaningful_title_from(url, page)
     message = "<span class='crawl'>- Crawled URL: <a href='#{url}'>#{title}</a></span>"
+    message = { kind: :crawler, message: message }
     message = { channel: "/scraper/messages", data: message }
 
     Net::HTTP.post_form faye, message: message.to_json

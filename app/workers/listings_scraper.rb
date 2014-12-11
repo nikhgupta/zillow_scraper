@@ -17,6 +17,7 @@ class ListingsScraper
 
     title   = page.search("title").text.gsub(/ - Zillow$/, '')
     message = "<span class='listings'>- Found Listing: <a href='#{url}'>#{title}</a></span>"
+    message = { kind: :listing, message: message }
     message = { channel: "/scraper/messages", data: message }
 
     Net::HTTP.post_form faye, message: message.to_json
