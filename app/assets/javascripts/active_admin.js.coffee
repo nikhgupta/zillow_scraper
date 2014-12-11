@@ -2,6 +2,8 @@
 
 jQuery ->
   window.client = new Faye.Client('http://localhost:9292/faye')
+  window.resultbox = $("#resultsbox")
   client.subscribe '/scraper/messages', (message) ->
-    console.log message
-    $("#resultsbox").append("<br>" + message) if message
+    if message
+      resultbox.append("<br>" + message)
+      resultbox.scrollTop resultbox[0].scrollHeight
