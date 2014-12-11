@@ -19,8 +19,9 @@ gem 'spring',        group: :development
 gem 'devise'
 gem 'activeadmin', github: 'activeadmin'
 
-gem 'wisper'
+gem 'faye'
 gem 'sidekiq'
+gem 'bloomfilter-rb'
 # gem 'sinatra', require: false
 
 gem 'thin'

@@ -22,6 +22,7 @@ ActiveAdmin.register_page "Dashboard" do
 
   page_action :run_scraper, method: :post do
     session[:scraper_running] = true
+    Crawler.perform_async
     redirect_to dashboard_path, notice: "Scraper has been started."
   end
 
