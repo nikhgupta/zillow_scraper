@@ -1,4 +1,4 @@
-class Crawler
+class ZillowCrawler
   include Sidekiq::Worker
 
   sidekiq_options queue: :zillow_scraper

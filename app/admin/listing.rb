@@ -16,4 +16,19 @@ ActiveAdmin.register Listing do
 
     actions
   end
+
+  show do |listing|
+    attributes_table do
+      row :property_id
+      row :listing
+      row :realtor
+      row :description
+      row :facts
+      row :price_with_status
+      row :address
+      row :updated
+    end
+
+    active_admin_comments
+  end
 end

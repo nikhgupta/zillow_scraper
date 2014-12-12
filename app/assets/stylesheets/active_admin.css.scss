@@ -47,17 +47,17 @@ h3.emphasize {
     overflow: auto;
 
     &#crawler{
-      height: 190px;
+      height: 188px;
     }
 
     &#statistics {
-      height: 135px;
+      height: 160px;
       overflow: hidden;
     }
 
     &#listing {
       border: none;
-      height: 267px;
+      height: 244px;
     }
 
     & > table {
@@ -66,6 +66,7 @@ h3.emphasize {
       // margin-top: 10px;
       th, td {
         border: 1px solid rgba(0,0,0, 0.2);
+        vertical-align: bottom;
       }
     }
 
@@ -89,6 +90,41 @@ h3.emphasize {
       color: #aaa;
       a {
         color: #daa;
+      }
+    }
+  }
+}
+
+#dashboard_stat_box table {
+  width: auto;
+  margin: auto;
+  th, td {
+    border: none;
+    vertical-align: bottom;
+    font-size: 1.5em;
+    font-family: "Droid Sans", sans-serif;
+  }
+  th{
+    text-align: right;
+  }
+}
+
+.attributes_table.listing {
+  table {
+    tr.row-description td {
+      text-align: justify;
+      p { margin: 0; }
+      ul {
+        width: 20%;
+        float: left;
+        margin: 0;
+      }
+      h4 {
+        padding: 5px 0;
+        clear: both;
+        font-size: 1.2em;
+        text-decoration: underline;
+        margin-bottom: 0;
       }
     }
   }

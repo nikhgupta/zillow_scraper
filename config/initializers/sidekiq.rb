@@ -1,9 +1,6 @@
 require 'sidekiq/api'
 # Sidekiq::Priority.priorities = [:godly, :huge, :high, :medium, nil, :low]
 Sidekiq::Priority.priorities = [:listing, :street, :zip_code, :county, :state, nil]
-ZillowScraper::Queues = Sidekiq::Priority.priorities.map do |priority|
-  "zillow_scraper_#{priority}"
-end
 
 class Sidekiq::Queue
   def confirm_clear

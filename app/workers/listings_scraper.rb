@@ -23,11 +23,11 @@ class ListingsScraper
   private
 
   def extract_listing_details(url, page)
-    @tmp, @url, @page = {}, url, page
+    @tmp, @url, @page = {url: url}, url, page
 
     fields  = %w[ property_id title description bedroom bathroom area ]
     fields |= %w[ status price city state neighborhood street zip ]
-    fields |= %w[ realtor_url realtor_title ]
+    fields |= %w[ url realtor_url realtor_title ]
 
     return if rental_listing?
 
@@ -57,9 +57,13 @@ class ListingsScraper
   end
 
   def extract_field_description
-    main = @page.search("#hdp-content div.notranslate")[0]
-    return main.text.strip if main.elements.blank?
-    main.text.gsub(main.elements.last.text, '').strip
+    main  = @page.search("#hdp-content div.notranslate")[0]
+    desc  = main.text.strip if main.elements.blank?
+    desc  = main.text.gsub(main.elements.last.text, '').strip unless desc
+    desc  = "<p>#{desc}</p>"
+    desc += @page.search(".hdp-facts .top-facts").map do |node|
+      node.inner_html.gsub(/\s*class=".*?"/, '').gsub(/\n+/, '')
+    end.join
   end
 
   def extract_field_status
@@ -93,10 +97,13 @@ class ListingsScraper
     state, city, neighborhood, _ = fields
 
     location = @page.search(".addr h1")
-    zip_code = location.search("span.addr_city").remove
+    zip_code = location.search("span.addr_city").remove.text.strip
     street   = location.text.gsub(/\,\s*$/, '').strip
-    zip_code = zip_code.text.strip.gsub(/[^\d+]/, '')
-    city = nil if city =~ /^\d+$/
+
+    city     = zip_code.gsub(/\,\s+[A-Z]{2}\s+\d+$/, '') if city =~ /^\d+$/
+    city     = nil if city == zip_code
+    zip_code = zip_code.gsub(/[^\d+]/, '')
+    neighborhood = nil if neighborhood == street
 
     @tmp = @tmp.merge({
       street: street, zip: zip_code,

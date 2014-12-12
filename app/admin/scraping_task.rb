@@ -3,7 +3,7 @@ ActiveAdmin.register_page "Scraping Task" do
 
   controller do
     def index
-      unless session[:scraper_running]
+      if scraper_stopped?
         notice = "Scraping is, currently, inactive. Please, click on 'Run Scraper' to start scraping Zillow.com"
         redirect_to dashboard_path, notice: notice
       end
@@ -32,7 +32,7 @@ ActiveAdmin.register_page "Scraping Task" do
   end
 
   action_item :scraper do
-    if session[:scraper_running]
+    if scraper_running?
       link_to "Stop Scraper", scraping_task_stop_path, method: :post
     else
       link_to "Run Scraper", scraping_task_start_path, method: :post
@@ -41,21 +41,14 @@ ActiveAdmin.register_page "Scraping Task" do
 
   page_action :start, method: :post do
     session[:scraper_running] = true
-    Sidekiq::Queue.confirm_clear(*ZillowScraper::Queues)
-    Sidekiq::Stats.new.reset
-    Listing.delete_all
-    BLOOM_FILTER.clear
-
-    Crawler.perform_async
+    ZillowScraper.stop_scraper_and_reset_everything!
+    ZillowCrawler.perform_async
     redirect_to scraping_task_path, notice: "Scraper has been started."
   end
 
   # TODO: maybe, a pause scraper method too?
   page_action :stop, method: :post do
-    Sidekiq::Queue.confirm_clear(*ZillowScraper::Queues)
-    Sidekiq::Stats.new.reset
-    Listing.delete_all
-    BLOOM_FILTER.clear
+    ZillowScraper.stop_scraper_and_reset_everything!
     session[:scraper_running] = false
     redirect_to dashboard_path, notice: "Scraper has been stopped."
   end
