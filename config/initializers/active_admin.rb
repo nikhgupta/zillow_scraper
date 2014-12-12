@@ -225,9 +225,6 @@ ActiveAdmin.setup do |config|
   #     admin.download_links = proc { can?(:view_download_links) }
   #
   #   end
-  config.namespace false do |ns|
-    ns.download_links = [:xml, :pdf, :csv, :json]
-  end
 
   # == Pagination
   #

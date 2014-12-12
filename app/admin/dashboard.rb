@@ -9,12 +9,12 @@ ActiveAdmin.register_page "Dashboard" do
     end
   end
 
-  action_item :scraper do
-    if scraper_running?
-      link_to "Stop Scraper", scraping_task_stop_path, method: :post
-    else
-      link_to "Run Scraper", scraping_task_start_path, method: :post
-    end
+  action_item :scraper, if: proc{ scraper_running? } do
+    link_to "Stop Scraper", scraping_task_stop_path, method: :post
+  end
+
+  action_item :scraper, if: proc{ scraper_stopped? } do
+    link_to "Run Scraper", scraping_task_start_path, method: :post
   end
 
   page_action :statistics, method: :post do

@@ -58,4 +58,22 @@ ActiveAdmin.register Listing do
 
     column :updated_at
   end
+
+  action_item :scraper, if: proc{ scraper_running? } do
+    link_to "Stop Scraper", scraping_task_stop_path, method: :post
+  end
+
+  action_item :scraper, if: proc{ scraper_stopped? } do
+    link_to "Run Scraper", scraping_task_start_path, method: :post
+  end
+
+  action_item :purge do
+    link_to "Delete Saved Listings", purge_listings_path, method: :post,
+      data: { confirm: "Are you sure you want to delete all existing listings from database?" }
+  end
+
+  collection_action :purge, method: :post do
+    Listing.delete_all
+    redirect_to listings_path, notice: "Deleted all existing listings from database."
+  end
 end
