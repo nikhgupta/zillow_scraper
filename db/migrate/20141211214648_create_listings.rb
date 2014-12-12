@@ -5,7 +5,8 @@ class CreateListings < ActiveRecord::Migration
 
       t.text :url
       t.text :description
-      t.text :listing_website_url
+      t.text :realtor_url
+      t.string :realtor_title
 
       t.float :area
       t.float :bedroom
@@ -17,7 +18,7 @@ class CreateListings < ActiveRecord::Migration
       t.string :state
       t.string :city
       t.string :neighborhood
-      t.integer :zip
+      t.string :zip
       t.string :street
 
       t.timestamps

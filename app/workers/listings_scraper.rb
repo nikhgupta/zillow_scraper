@@ -27,12 +27,18 @@ class ListingsScraper
     zip_code = location.search("span.addr_city").remove
     street   = location.text.gsub(/\,\s*$/, '').strip
     zip_code = zip_code.text.strip.gsub(/[^\d+]/, '')
+    city = nil if city =~ /^\d+$/
+
+    realtor_url, realtor_title = find_realtor(page)
 
     ActiveRecord::Base.transaction do
       listing = Listing.find_or_create_by(property_id: property_id)
       listing.update_attributes({
-        description: description,
         url: url,
+        realtor_url: realtor_url,
+        realtor_title: realtor_title,
+        description: description,
+
         bedroom: bedroom,
         bathroom: bathroom,
         area: area,
@@ -52,6 +58,26 @@ class ListingsScraper
   end
 
   private
+
+  def find_realtor(page)
+    regex = /ajaxURL:\"(.*?)\",divId:\"listing-provided-by-module\"/
+    data  = page.body.scan(/k\.load\((.*?)\);/).flatten
+    data  = data.detect{|a| a.include?("listing-provided-by-module")}
+    return if data.blank?
+
+    data = data.match(regex)
+    url  = data[1]
+    return if url.blank?
+
+    page = Mechanize::AGENT.get(url)
+    data = JSON.parse page.body
+
+    html = Nokogiri::HTML(data["html"])
+    el   = html.search("a.listing-website-track-link")
+    link = URI.decode(el.attr("href").text.match(/\&url=(.*)$/)[1]) rescue nil
+
+    [ link, el.text ]
+  end
 
   def find_status(selector, statuses)
     classes = page.search(selector).children.map{|a| a.attr("class")}
