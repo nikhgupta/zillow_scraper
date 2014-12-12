@@ -81,6 +81,11 @@ GEM
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
     dotenv-deployment (0.0.2)
+    draper (1.4.0)
+      actionpack (>= 3.0)
+      activemodel (>= 3.0)
+      activesupport (>= 3.0)
+      request_store (~> 1.0)
     em-http-request (1.1.2)
       addressable (>= 2.3.4)
       cookiejar
@@ -198,6 +203,7 @@ GEM
     redis (3.1.0)
     redis-namespace (1.5.1)
       redis (~> 3.0, >= 3.0.4)
+    request_store (1.1.0)
     responders (1.1.2)
       railties (>= 3.2, < 4.2)
     sass (3.2.19)
@@ -264,6 +270,7 @@ DEPENDENCIES
   bloomfilter-rb
   coffee-rails (~> 4.0.0)
   devise
+  draper
   faye
   foreman
   jbuilder (~> 2.0)

@@ -41,6 +41,11 @@ ActiveAdmin.register_page "Scraping Task" do
 
   page_action :start, method: :post do
     session[:scraper_running] = true
+    Sidekiq::Queue.confirm_clear(*ZillowScraper::Queues)
+    Sidekiq::Stats.new.reset
+    Listing.delete_all
+    BLOOM_FILTER.clear
+
     Crawler.perform_async
     redirect_to scraping_task_path, notice: "Scraper has been started."
   end
@@ -49,6 +54,7 @@ ActiveAdmin.register_page "Scraping Task" do
   page_action :stop, method: :post do
     Sidekiq::Queue.confirm_clear(*ZillowScraper::Queues)
     Sidekiq::Stats.new.reset
+    Listing.delete_all
     BLOOM_FILTER.clear
     session[:scraper_running] = false
     redirect_to dashboard_path, notice: "Scraper has been stopped."

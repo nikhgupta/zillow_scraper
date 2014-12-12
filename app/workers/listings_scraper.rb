@@ -1,72 +1,113 @@
+# A sidekiq worker to crawl various webpages on Zillow.com.
+#
+# If the web pages found are not a listing, they are queued at the end of this
+# worker, otherwise, they are sent to the ListingsScraper worker.
+#
+# Web pages are crawled on priority basis, such that a DFS crawl is initiated.
+# Pages that respond to a street have higher priority than zips, cities,
+# counties or states, and so on respectively. This allows us to fetch listings
+# details very early, as opposed to a BFS alogirthm.
+#
 class ListingsScraper
   include Sidekiq::Worker
 
   sidekiq_options queue: :zillow_scraper
 
   def perform url
-    page = Mechanize::AGENT.get url
-    property_id = page.search("li#save-menu").attr("data-zpid").text.strip.to_i
+    page    = Mechanize::AGENT.get url
+    data    = extract_listing_details(url, page)
+    listing = migrate_listing_with_data(data)
+    broadcast_listing listing
+  end
 
-    title = page.search("title").text.gsub(/ - Zillow$/, '')
+  private
 
-    main = page.search("#hdp-content div.notranslate")[0]
-    description = main.text.strip
-    unwanted_el = main.elements.last
-    description = description.gsub(unwanted_el.text, '').strip if unwanted_el
+  def extract_listing_details(url, page)
+    @tmp, @url, @page = {}, url, page
 
-    selector = ".zsg-content-header .addr_bbs"
-    bedroom, bathroom, area = page.search(selector).map do |el|
-      el.text.strip.gsub(/[^\d+\.]/, '').to_f
+    fields  = %w[ property_id title description bedroom bathroom area ]
+    fields |= %w[ status price city state neighborhood street zip ]
+    fields |= %w[ realtor_url realtor_title ]
+
+    return if rental_listing?
+
+    groups  = %w[ location bed_bath_area realtor]
+    groups.map{|group| send("extract_#{group}_fields")}
+
+    fields = fields.map(&:to_sym).map do |field|
+      value  = @tmp[field] if @tmp.has_key?(field)
+      method = "extract_field_#{field}"
+      value  = send(method) if value.nil? && respond_to?(method, true)
+      [field, value]
     end
 
-    status = page.search("#listing-icon").attr("data-icon-class").text.gsub(/^zsg-icon-/, '').titleize
-    price  = page.search(".estimates .main-row").text
-    price  = price.match(/\$((\d+\,)*\d+)\s*/)
-    price  = price ? price[1].gsub(/[^\d+]/, '').to_i : 0
+    Hash[fields]
+  end
 
-    state, city, neighborhood, _ = page.search("ol.zsg-breadcrumbs li").map{|a| a.text.strip}
-    location = page.search(".addr h1")
+  def rental_listing?
+    extract_field_status == :for_rent
+  end
+
+  def extract_field_property_id
+    @page.search("li#save-menu").attr("data-zpid").text.strip.to_i
+  end
+
+  def extract_field_title
+    @page.search("title").text.gsub(/ - Zillow$/, '')
+  end
+
+  def extract_field_description
+    main = @page.search("#hdp-content div.notranslate")[0]
+    return main.text.strip if main.elements.blank?
+    main.text.gsub(main.elements.last.text, '').strip
+  end
+
+  def extract_field_status
+    return @tmp[:status] if @tmp[:status]
+    @tmp[:status] = @page.search("#listing-icon").attr("data-icon-class")
+    @tmp[:status] = @tmp[:status].text.gsub(/^zsg-icon-/, '')
+    @tmp[:status] = @tmp[:status].parameterize.underscore.to_sym
+  end
+
+  def extract_field_price
+    price  = @page.search(".estimates .main-row").text
+    price  = price.match(/\$((\d+\,)*\d+)\s*/)
+    price ? price[1].gsub(/[^\d+]/, '').to_i : 0
+  end
+
+  def extract_bed_bath_area_fields
+    selector = ".zsg-content-header .addr_bbs"
+
+    fields = @page.search(selector).map do |field|
+      field = field.text.split(" ")
+      [ field[1].singularize.to_sym, field[0].gsub(/[^\d+\.]/, '').to_f]
+    end
+
+    fields = Hash[fields]
+    fields = fields[:bed], fields[:bath], fields[:sqft]
+    @tmp[:bedroom], @tmp[:bathroom], @tmp[:area] = fields
+  end
+
+  def extract_location_fields
+    fields = @page.search("ol.zsg-breadcrumbs li").map{|a| a.text.strip}
+    state, city, neighborhood, _ = fields
+
+    location = @page.search(".addr h1")
     zip_code = location.search("span.addr_city").remove
     street   = location.text.gsub(/\,\s*$/, '').strip
     zip_code = zip_code.text.strip.gsub(/[^\d+]/, '')
     city = nil if city =~ /^\d+$/
 
-    realtor_url, realtor_title = find_realtor(page)
-
-    listing = nil
-
-    ActiveRecord::Base.transaction do
-      listing = Listing.find_or_create_by(property_id: property_id)
-      listing.update_attributes({
-        url: url,
-        title: title,
-        realtor_url: realtor_url,
-        realtor_title: realtor_title,
-        description: description,
-
-        bedroom: bedroom,
-        bathroom: bathroom,
-        area: area,
-        price: price,
-        status: status,
-
-        state: state,
-        city: city,
-        neighborhood: neighborhood,
-        zip: zip_code,
-        street: street
-      })
-    end
-
-    # update faye
-    broadcast_listing url, page, listing
+    @tmp = @tmp.merge({
+      street: street, zip: zip_code,
+      neighborhood: neighborhood,
+      city: city, state: state
+    })
   end
 
-  private
-
-  def find_realtor(page)
+  def extract_realtor_fields
     regex = /ajaxURL:\"(.*?)\",divId:\"listing-provided-by-module\"/
-    data  = page.body.scan(/k\.load\((.*?)\);/).flatten
+    data  = @page.body.scan(/k\.load\((.*?)\);/).flatten
     data  = data.detect{|a| a.include?("listing-provided-by-module")}
     return if data.blank?
 
@@ -79,39 +120,26 @@ class ListingsScraper
 
     html = Nokogiri::HTML(data["html"])
     el   = html.search("a.listing-website-track-link")
-    link = URI.decode(el.attr("href").text.match(/\&url=(.*)$/)[1]) rescue nil
+    return if el.blank?
 
-    [ link, el.text ]
+    link = el.attr("href").text.match(/\&url=(.*)$/)
+    link = URI.decode(link[1]).to_s if link
+
+    @tmp[:realtor_url], @tmp[:realtor_title] = [ link, el.text ] if link
   end
 
-  def find_status(selector, statuses)
-    classes = page.search(selector).children.map{|a| a.attr("class")}
-    classes = classes.compact.join(" ")
-    classes = classes.gsub(/\s*(-row|template|hide)/, '')
-    classes = classes.split(" ").compact.uniq
+  def migrate_listing_with_data(data)
+    property_id = data.delete(:property_id)
 
-    statuses.detect{|klass| classes.include?(klass)}.to_s.titleize
-  end
-
-  def broadcast_listing url, page, listing
-    faye     = URI.parse "http://localhost:9292/faye"
-
-    message  = "<tr>"
-    message += "<th><a href='#{url}'>#{listing.title}</a></th>"
-    message += "<td>#{listing.area} sq.ft.</td>"
-    message += "<td>#{listing.bedroom} bed</td>"
-    message += "<td>#{listing.bathroom} bath</td>"
-    if listing.price > 0
-      message += "<td>#{listing.status}</td>"
-      message += "<td>$#{listing.price}</td>"
-    else
-      message += "<td colspan=2>#{listing.status}</td>"
+    ActiveRecord::Base.transaction do
+      listing = Listing.find_or_create_by(property_id: property_id)
+      listing.update_attributes(data)
+      listing
     end
-    message += "</tr>"
+  end
 
-    message  = { kind: :listing, html: message }
-    message  = { channel: "/scraper/messages", data: message }
-
-    Net::HTTP.post_form faye, message: message.to_json
+  def broadcast_listing listing
+    data  = { kind: :listing, html: listing.decorate.to_table_row }
+    Faye.broadcast "/scraper/messages", data
   end
 end

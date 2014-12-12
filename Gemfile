@@ -25,6 +25,8 @@ gem 'bloomfilter-rb'
 gem 'sidekiq-priority'
 gem 'sinatra', require: false
 
+gem 'draper'
+
 gem 'thin'
 gem 'foreman'
 

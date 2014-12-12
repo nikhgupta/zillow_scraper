@@ -54,8 +54,9 @@ class Crawler
   def broadcast_crawl url, page
     faye     = URI.parse "http://localhost:9292/faye"
     title    = extract_meaningful_title_from(url, page)
+    (5 - title.length).times{ title.push("&nbsp; " * 5) }
+
     message  = "<tr>"
-    # message += "<td>Crawled URL</td>"
     message += "<td><a href='#{url}'>#{page.search("title").text.gsub(/ - Zillow$/, '')}</a></td>"
     message += "<td>#{title.join("</td><td>")}</td>"
     message += "</tr>"
