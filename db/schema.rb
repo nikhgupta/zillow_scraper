@@ -30,16 +30,19 @@ ActiveRecord::Schema.define(version: 20141211214648) do
 
   create_table "listings", force: true do |t|
     t.integer  "property_id"
+    t.text     "url"
     t.text     "description"
-    t.text     "link"
-    t.integer  "area"
-    t.integer  "bedroom"
-    t.integer  "bathroom"
-    t.integer  "cost"
+    t.text     "listing_website_url"
+    t.float    "area",                limit: 24
+    t.float    "bedroom",             limit: 24
+    t.float    "bathroom",            limit: 24
+    t.integer  "price"
+    t.string   "status"
     t.string   "state"
+    t.string   "city"
+    t.string   "neighborhood"
     t.integer  "zip"
     t.string   "street"
-    t.string   "flat"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
