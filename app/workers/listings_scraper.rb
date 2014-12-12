@@ -84,12 +84,12 @@ class ListingsScraper
 
     fields = @page.search(selector).map do |field|
       field = field.text.split(" ")
-      [ field[1].singularize.to_sym, field[0].gsub(/[^\d+\.]/, '').to_f]
+      [ field[1].to_s.singularize.to_sym, field[0].gsub(/[^\d+\.]/, '').to_f]
     end
 
     fields = Hash[fields]
     fields = fields[:bed], fields[:bath], fields[:sqft]
-    @tmp[:bedroom], @tmp[:bathroom], @tmp[:area] = fields
+    @tmp[:bedroom], @tmp[:bathroom], @tmp[:area] = fields.map(&:to_f)
   end
 
   def extract_location_fields

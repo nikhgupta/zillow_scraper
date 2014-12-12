@@ -1,5 +1,5 @@
 ActiveAdmin.register_page "Scraping Task" do
-  menu priority: 10
+  menu priority: 2
 
   controller do
     def index

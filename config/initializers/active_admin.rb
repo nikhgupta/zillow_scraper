@@ -177,6 +177,7 @@ ActiveAdmin.setup do |config|
   #
   # Force the use of quotes
   # config.csv_options = { force_quotes: true }
+  config.csv_options = { force_quotes: true }
 
   # == Menu System
   #
@@ -198,6 +199,11 @@ ActiveAdmin.setup do |config|
   #       menu.add label: "My Great Website", url: "http://www.mygreatwebsite.com", html_options: { target: :blank }
   #     end
   #   end
+  config.namespace false do |ns|
+    ns.build_menu :default do |menu|
+      menu.add label: "Monitor", url: -> { sidekiq_web_path }, html_options: { target: :blank }
+    end
+  end
 
   # == Download Links
   #
@@ -219,6 +225,9 @@ ActiveAdmin.setup do |config|
   #     admin.download_links = proc { can?(:view_download_links) }
   #
   #   end
+  config.namespace false do |ns|
+    ns.download_links = [:xml, :pdf, :csv, :json]
+  end
 
   # == Pagination
   #
