@@ -7,6 +7,8 @@ class ListingsScraper
     page = Mechanize::AGENT.get url
     property_id = page.search("li#save-menu").attr("data-zpid").text.strip.to_i
 
+    title = page.search("title").text.gsub(/ - Zillow$/, '')
+
     main = page.search("#hdp-content div.notranslate")[0]
     description = main.text.strip
     unwanted_el = main.elements.last
@@ -31,10 +33,13 @@ class ListingsScraper
 
     realtor_url, realtor_title = find_realtor(page)
 
+    listing = nil
+
     ActiveRecord::Base.transaction do
       listing = Listing.find_or_create_by(property_id: property_id)
       listing.update_attributes({
         url: url,
+        title: title,
         realtor_url: realtor_url,
         realtor_title: realtor_title,
         description: description,
@@ -54,7 +59,7 @@ class ListingsScraper
     end
 
     # update faye
-    broadcast_listing url, page
+    broadcast_listing url, page, listing
   end
 
   private
@@ -88,13 +93,24 @@ class ListingsScraper
     statuses.detect{|klass| classes.include?(klass)}.to_s.titleize
   end
 
-  def broadcast_listing url, page
-    faye    = URI.parse "http://localhost:9292/faye"
+  def broadcast_listing url, page, listing
+    faye     = URI.parse "http://localhost:9292/faye"
 
-    title   = page.search("title").text.gsub(/ - Zillow$/, '')
-    message = "<span class='listings'>- Found Listing: <a href='#{url}'>#{title}</a></span>"
-    message = { kind: :listing, message: message }
-    message = { channel: "/scraper/messages", data: message }
+    message  = "<tr>"
+    message += "<th><a href='#{url}'>#{listing.title}</a></th>"
+    message += "<td>#{listing.area} sq.ft.</td>"
+    message += "<td>#{listing.bedroom} bed</td>"
+    message += "<td>#{listing.bathroom} bath</td>"
+    if listing.price > 0
+      message += "<td>#{listing.status}</td>"
+      message += "<td>$#{listing.price}</td>"
+    else
+      message += "<td colspan=2>#{listing.status}</td>"
+    end
+    message += "</tr>"
+
+    message  = { kind: :listing, html: message }
+    message  = { channel: "/scraper/messages", data: message }
 
     Net::HTTP.post_form faye, message: message.to_json
   end

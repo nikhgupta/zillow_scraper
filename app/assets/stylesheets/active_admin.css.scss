@@ -36,31 +36,36 @@ h3.emphasize {
   color: #333;
   max-height: 600px;
   & > div {
-    padding: 0px 20px;
+    padding: 0;
     margin: 0;
-    border-bottom: 1px solid;
+    border-bottom: 4px solid #000;
     overflow: auto;
 
     &#crawler{
-      height: 180px;
+      height: 190px;
     }
 
     &#statistics {
-      height: 140px;
+      height: 135px;
       overflow: hidden;
     }
 
     &#listing {
       border: none;
-      height: 275px;
+      height: 267px;
     }
 
-    & > table.statistics {
-      width: 50%;
-      margin-top: 10px;
+    & > table {
+      margin: 0 !important;
+      // width: 50%;
+      // margin-top: 10px;
+      th, td {
+        border: 1px solid rgba(0,0,0, 0.5);
+      }
     }
 
     & > div.sidebar {
+      display: none;
       position: absolute;
       right: 90px;
       h3 {

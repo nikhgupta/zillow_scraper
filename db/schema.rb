@@ -31,6 +31,7 @@ ActiveRecord::Schema.define(version: 20141211214648) do
   create_table "listings", force: true do |t|
     t.integer  "property_id"
     t.text     "url"
+    t.string   "title"
     t.text     "description"
     t.text     "realtor_url"
     t.string   "realtor_title"

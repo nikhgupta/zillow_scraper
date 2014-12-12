@@ -4,6 +4,7 @@ class CreateListings < ActiveRecord::Migration
       t.integer :property_id
 
       t.text :url
+      t.string :title
       t.text :description
       t.text :realtor_url
       t.string :realtor_title

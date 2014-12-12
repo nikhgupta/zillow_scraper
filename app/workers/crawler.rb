@@ -20,7 +20,7 @@ class Crawler
 
     # crawlable links
     links.select do |link|
-      link.include?(url) && link != url
+      link =~ /\/b\// || ( link.include?(url) && link != url )
     end.each do |link|
       priority = job_priority_for(link)
       self.class.perform_with_priority priority, link
@@ -28,7 +28,7 @@ class Crawler
 
     # listings
     links.select do |link|
-      link =~ /\/(?:b|homedetails)\//
+      link =~ /\/homedetails\//
     end.each do |link|
       ListingsScraper.perform_with_priority :listing, link
     end
@@ -41,7 +41,7 @@ class Crawler
 
   def job_priority_for url
     match = url.match(/\/browse\/homes\/(.*)$/)
-    return :medium unless match
+    return :street unless match
     parts = match[1].split("/")
     case parts.length
     when 1 then :state
@@ -52,28 +52,33 @@ class Crawler
   end
 
   def broadcast_crawl url, page
-    faye    = URI.parse "http://localhost:9292/faye"
-    title   = extract_meaningful_title_from(url, page)
-    message = "<span class='crawl'>- Crawled URL: <a href='#{url}'>#{title}</a></span>"
-    message = { kind: :crawler, message: message }
-    message = { channel: "/scraper/messages", data: message }
+    faye     = URI.parse "http://localhost:9292/faye"
+    title    = extract_meaningful_title_from(url, page)
+    message  = "<tr>"
+    # message += "<td>Crawled URL</td>"
+    message += "<td><a href='#{url}'>#{page.search("title").text.gsub(/ - Zillow$/, '')}</a></td>"
+    message += "<td>#{title.join("</td><td>")}</td>"
+    message += "</tr>"
+    message  = { kind: :crawler, html: message }
+    message  = { channel: "/scraper/messages", data: message }
 
     Net::HTTP.post_form faye, message: message.to_json
   end
 
   def extract_meaningful_title_from zillow_url, page
     match = zillow_url.match(/\/browse\/homes\/(.*)$/)
-    return "<No Title Found>" unless match
+    return ["APARTMENT"] unless match
 
     parts = match[1].split("/")
     title  = page.search("title").text
     breads = page.search("ol.zsg-breadcrumbs li").map(&:text)
-    breads = breads.join(" > ")
+    # breads = breads.join(" > ")
 
-    return "States in United States" if parts.blank?
+    return [ "United States" ] if parts.blank?
 
     match = title.match(/homes on (.*) in/i)
     match = title.match(/in (.*) -/i) unless match
-    "#{breads} > #{match[1]}"
+    breads.push(match[1])
+    # "#{breads} > #{match[1]}"
   end
 end

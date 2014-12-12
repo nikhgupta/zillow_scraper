@@ -14,7 +14,7 @@ update_statistics = ->
     html += "<tr><th>Failed to Process</td><td>#{lpad data.failed, 5} pages</td></tr>"
     html += "<tr><th>Total Pages in Queue</td><td>#{lpad data.enqueued, 5} pages</td></tr>"
     html += "<tr><th>Total Listings Scraped</td><td>#{lpad data.items, 5} listings</td></tr>"
-    html += "<tr><th style='border: none'>Total Listings in Queue</td><td style='border: none'>#{lpad data.queues.zillow_scraper_listing, 5} listings</td></tr>"
+    html += "<tr><th>Total Listings in Queue</td><td>#{lpad data.queues.zillow_scraper_listing, 5} listings</td></tr>"
     # html += "<tr><td>Updated at</td><td>#{data.timestamp}</td></tr>"
     statbox.html(html)
 
@@ -33,6 +33,6 @@ jQuery ->
 
   client.subscribe '/scraper/messages', (payload) ->
     box = $("#resultsbox ##{payload.kind}")
-    if payload.message
-      box.append("<br>" + payload.message)
+    if payload.html
+      box.find("table tbody").append(payload.html)
       box.scrollTop box[0].scrollHeight

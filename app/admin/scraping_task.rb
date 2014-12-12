@@ -16,17 +16,17 @@ ActiveAdmin.register_page "Scraping Task" do
         #TODO: get the starting time of the scrape, as well as rate per minute
         div id: "statistics" do
           div(class: "sidebar"){ h3 "Statistics" }
-          table class: :statistics do
-            tbody
-          end
+          table { tbody }
         end
 
         div id: 'crawler' do
           div(class: "sidebar"){ h3 "Crawling Progress" }
+          table { tbody }
         end
 
         div id: "listing" do
           div(class: "sidebar"){ h3 "Scraping Progress" }
+          table { tbody }
         end
       end
   end
