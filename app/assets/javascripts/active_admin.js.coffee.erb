@@ -28,7 +28,7 @@ update_all_stat_boxes = ->
   , 500
 
 jQuery ->
-  window.client = new Faye.Client('http://localhost:9292/faye')
+  window.client = new Faye.Client("<%= FAYE_SERVER %>");
 
   for index, box in ["statistics", "crawler", "listing"]
     box = $("#resultsbox ##{box}")

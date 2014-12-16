@@ -168,7 +168,10 @@ ActiveAdmin.setup do |config|
   # To load a javascript file:
   #   config.register_javascript 'my_javascript.js'
   config.register_stylesheet 'http://fonts.googleapis.com/css?family=Droid+Sans:400,700|Droid+Sans+Mono', media: :all
-  config.register_javascript 'http://localhost:9292/faye/client.js'
+  current_javascripts = config.javascripts.clone
+  config.clear_javascripts!
+  config.register_javascript "#{FAYE_SERVER}/client.js"
+  current_javascripts.each{ |j| config.register_javascript j }
 
   # == CSV options
   #
