@@ -16,6 +16,7 @@ class ListingsScraper
   def perform url
     page    = Mechanize::AGENT.get url
     data    = extract_listing_details(url, page)
+    return if data.blank?
     listing = migrate_listing_with_data(data)
     broadcast_listing listing
   end

@@ -13,20 +13,18 @@ ActiveAdmin.register_page "Scraping Task" do
   content title: "Zillow Scraping Task" do
       div id: 'resultsbox' do
 
+        containers = {
+          statistics: :statistics,
+          crawler: :crawling_progress,
+          listing: :scraping_progress
+        }
+
         #TODO: get the starting time of the scrape, as well as rate per minute
-        div id: "statistics" do
-          div(class: "sidebar"){ h3 "Statistics" }
-          table { tbody }
-        end
-
-        div id: 'crawler' do
-          div(class: "sidebar"){ h3 "Crawling Progress" }
-          table { tbody }
-        end
-
-        div id: "listing" do
-          div(class: "sidebar"){ h3 "Scraping Progress" }
-          table { tbody }
+        containers.each do |id, heading|
+          div id: id do
+            div(class: "sidebar"){ h3 heading }
+            table { tbody }
+          end
         end
       end
   end

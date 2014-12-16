@@ -60,7 +60,7 @@ class ZillowCrawler
     message += "<td>#{title.join("</td><td>")}</td>"
     message += "</tr>"
 
-    data  = { kind: :listing, html: listing.decorate.to_table_row }
+    data  = { kind: :crawler, html: message }
     Faye.broadcast "/scraper/messages", data
   end
 
