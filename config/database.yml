@@ -10,6 +10,7 @@
 #   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
 #
 default: &default
+  host: 127.0.0.1
   adapter: mysql2
   encoding: utf8
   pool: 25
@@ -18,7 +19,6 @@ default: &default
 
 development:
   <<: *default
-  socket: /tmp/mysql.sock
   database: zillow_scraper_development
 
 # Warning: The database defined as "test" will be erased and
@@ -26,7 +26,6 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  socket: /tmp/mysql.sock
   database: zillow_scraper_test
 
 # As with config/secrets.yml, you never want to store sensitive information,
